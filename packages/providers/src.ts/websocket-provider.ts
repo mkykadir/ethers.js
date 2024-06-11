@@ -252,20 +252,34 @@ export class WebSocketProvider extends JsonRpcProvider {
                     const blockNumber = BigNumber.from(result.number).toNumber();
                     this._emitted.block = blockNumber;
                     this.emit("block", blockNumber);
-                });
+                })
                 break;
 
             case "pending":
-                this._subscribe("pending", [ "newPendingTransactions" ], (result: any) => {
+                this._subscribe(
+                  "pending",
+                  ["newPendingTransactions"],
+                  (result: any) => {
                     this.emit("pending", result);
-                });
+                  }
+                ).catch((error) => {
+                  throw error;
+                });;
                 break;
 
             case "filter":
-                this._subscribe(event.tag, [ "logs", this._getFilter(event.filter) ], (result: any) => {
-                    if (result.removed == null) { result.removed = false; }
+                this._subscribe(
+                  event.tag,
+                  ["logs", this._getFilter(event.filter)],
+                  (result: any) => {
+                    if (result.removed == null) {
+                      result.removed = false;
+                    }
                     this.emit(event.filter, this.formatter.filterLog(result));
-                });
+                  }
+                ).catch((error) => {
+                  throw error;
+                });;
                 break;
 
             case "tx": {
@@ -284,9 +298,13 @@ export class WebSocketProvider extends JsonRpcProvider {
                 // to keep an eye out for transactions we are watching for.
                 // Starting a subscription for an event (i.e. "tx") that is already
                 // running is (basically) a nop.
-                this._subscribe("tx", [ "newHeads" ], (result: any) => {
-                    this._events.filter((e) => (e.type === "tx")).forEach(emitReceipt);
-                });
+                this._subscribe("tx", ["newHeads"], (result: any) => {
+                  this._events
+                    .filter((e) => e.type === "tx")
+                    .forEach(emitReceipt);
+                }).catch((error) => {
+                  throw error;
+                });;
                 break;
             }
 
